@@ -30,7 +30,7 @@ export const SCHEMA_VERSION = 3;
  * board re-seeds from here, and the previous document is kept under the
  * `game:superseded` key so nothing is actually lost.
  */
-export const SEED_VERSION = 5;
+export const SEED_VERSION = 6;
 
 let seq = 0;
 const uid = (p) => `${p}${(++seq).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -237,7 +237,7 @@ export function defaultGame() {
               'Myriam Fares',
               'Fairuz',
               'Carole Samaha',
-            ], 1),
+            ], 0),
 
             mc('Who performed in front of Pope John Paul II during his visit to Lebanon in 1997?', [
               'Fairuz',
@@ -263,7 +263,7 @@ export function defaultGame() {
             open('I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?',
               'Maps'),
 
-            open('Watch the video twice. After watching the video, ask the question:\n\nWhat was the colour of Marc Anthony’s tie?',
+            open('What was the colour of Marc Anthony’s tie?',
               'Yellow',
               { media: vid('r3-q2-video.mp4') }),
 
@@ -272,7 +272,13 @@ export function defaultGame() {
               { media: vid('r3-q3-song.mp4') }),
 
             open('Group memory challenge:\n\nAsk the group to focus well, and read this story aloud ONE time:\n\n“Sarah went to the supermarket on Monday. She bought apples, milk, and chocolate. She met her friend Lina near the entrance, who was wearing a red jacket. Sarah then took a taxi home because it was raining.”',
-              'What colour was Lina’s jacket? — Red\nWhat did Sarah buy? — Chocolate, apples, milk\nHow much did they cost? — Not mentioned (we don’t know)\nHow did Lina get home? — Not mentioned (we don’t know)'),
+              '',
+              { parts: [
+                { q: 'What colour was Lina’s jacket?', a: 'Red' },
+                { q: 'What did Sarah buy?', a: 'Chocolate, apples, milk' },
+                { q: 'How much did they cost?', a: 'Not mentioned — we don’t know' },
+                { q: 'How did Lina get home?', a: 'Not mentioned — we don’t know' },
+              ] }),
 
             open('How long does sunlight take to reach Earth?\n\nDistance: 150,000,000 km · Speed of light: 300,000 km/second.\nCan you calculate the travel time?',
               '500 seconds — 8 minutes and 20 seconds',
