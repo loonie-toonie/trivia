@@ -114,6 +114,7 @@ function commitQuestion() {
     q.options = [];
     q.correct = -1;
     q.answer = '';
+    q.parts = [];
     q.label = '';
     q.media = null;
     q.done = false;

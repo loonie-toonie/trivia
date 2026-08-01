@@ -6,7 +6,7 @@
  * the browser is the normal workflow, not editing this file.
  *
  * Question shape:
- *   { id, prompt, options, correct, answer, label, media, done }
+ *   { id, prompt, options, correct, answer, parts, label, media, done }
  *
  * options  — array of choice strings. Empty array = open question, no choices.
  * correct  — index into options, or -1 when there is no single right choice.
@@ -19,7 +19,18 @@
  *   { kind: 'youtube', url, videoId }                — embedded player
  */
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
+
+/**
+ * Bump this whenever the questions below change.
+ *
+ * The saved game in IndexedDB normally wins over this file — that is what makes
+ * in-browser editing stick. But it also means a content fix pushed to the site
+ * would never reach anyone who had already opened it. On a version bump the
+ * board re-seeds from here, and the previous document is kept under the
+ * `game:superseded` key so nothing is actually lost.
+ */
+export const SEED_VERSION = 4;
 
 let seq = 0;
 const uid = (p) => `${p}${(++seq).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -40,7 +51,12 @@ function mc(prompt, options, correct, extra = {}) {
   };
 }
 
-/** Open question — no choices, just a written answer. */
+/**
+ * Open question — no choices, just a written answer.
+ *
+ * `extra.parts` turns it into a multi-part challenge: the prompt is read out
+ * first, then each part steps question → answer on its own.
+ */
 function open(prompt, answer, extra = {}) {
   return {
     id: uid('q'),
@@ -48,6 +64,7 @@ function open(prompt, answer, extra = {}) {
     options: [],
     correct: -1,
     answer,
+    parts: extra.parts || [],
     label: '',
     media: extra.media || null,
     done: false,
@@ -265,7 +282,12 @@ export function defaultGame() {
               'الأرزة — the Cedar'),
 
             open('Steal 100 Points Challenge!\n\nChallenge another team for the chance to steal 100 points! Each team chooses two players. All four players stand with their heads facing down and listen to three questions. For each question, the first player to raise their head and answer correctly earns one point. The team with the most points after all three questions wins and steals from the other team!\n\nThe challenge will be around Disney movies.',
-              'Q1 — In Finding Nemo, what type of fish is Nemo? → Clownfish\nQ2 — In The Lion King, who is Simba’s evil uncle? → Scar\nQ3 — In Aladdin, what is the name of Princess Jasmine’s tiger? → Rajah'),
+              '',
+              { parts: [
+                { q: 'In Finding Nemo, what type of fish is Nemo?', a: 'Clownfish' },
+                { q: 'In The Lion King, who is Simba’s evil uncle?', a: 'Scar' },
+                { q: 'In Aladdin, what is the name of Princess Jasmine’s tiger?', a: 'Rajah' },
+              ] }),
 
             open('You just saw seven seconds from a video regarding a famous Lebanese song. Can you guess its name?',
               'Kifik 3a Fra2e — Fadel Chaker',
@@ -282,7 +304,7 @@ export function defaultGame() {
 
 /** A blank question, used when Board Size grows the grid. */
 export function blankQuestion() {
-  return { id: uid('q'), prompt: '', options: [], correct: -1, answer: '', label: '', media: null, done: false };
+  return { id: uid('q'), prompt: '', options: [], correct: -1, answer: '', parts: [], label: '', media: null, done: false };
 }
 
 /** A blank category, used when Board Size adds a column. */

@@ -1,18 +1,22 @@
 /**
  * The question stage.
  *
- * Three steps, advanced with Space / click / the primary button:
- *   0  MEDIA     — the image, clip or track plays full-bleed, no text
- *   1  QUESTION  — media shrinks to a thumbnail, the question appears
- *   2  ANSWER    — the answer is revealed
+ * A question is a list of frames, advanced with Space / click / the primary
+ * button and walked back with ← :
  *
- * Questions with no media start at step 1.
+ *   MEDIA        video or audio plays full-bleed, no text (skipped for stills)
+ *   PROMPT       the question, with its choices if it has any
+ *   ANSWER       the answer, or the right choice lit up
+ *
+ * A multi-part challenge replaces the single ANSWER frame with a
+ * question/answer pair per part, so the host can work through them one at a
+ * time instead of showing every answer at once.
  */
 
 import { state, findQuestion, mediaSrc, touch } from './state.js';
 
 const dom = {};
-let cur = null;     // { roundIdx, catIdx, qIdx, q, step, hasMedia }
+let cur = null;     // { roundIdx, catIdx, qIdx, q, timed, label, frames, i }
 let armedAt = 0;    // timestamp the stage opened; guards the opening click
 
 export function init() {
@@ -55,11 +59,13 @@ export async function open(roundIdx, catIdx, qIdx) {
   // question appears. A still image is part of the question, so it shows
   // together with it and there is nothing to wait for.
   const timed = isTimed(q.media);
-  cur = { roundIdx, catIdx, qIdx, q, step: timed ? 0 : 1, hasMedia: !!q.media, timed };
+  const label = r.hideCategories ? `Question ${qIdx + 1}` : c.icon ? `${c.icon} ${c.name}` : c.name;
+
+  cur = { roundIdx, catIdx, qIdx, q, timed, label, i: 0, frames: buildFrames(q, timed) };
   armedAt = performance.now();
 
   dom.round.textContent = r.subtitle ? `${r.name} · ${r.subtitle}` : r.name;
-  dom.cat.textContent = r.hideCategories ? `Question ${qIdx + 1}` : c.icon ? `${c.icon} ${c.name}` : c.name;
+  dom.cat.textContent = label;
   dom.cat.style.setProperty('--cat', c.color);
 
   document.activeElement?.blur?.();
@@ -78,29 +84,48 @@ export function close() {
   document.getElementById('app').inert = false;
 }
 
+/** Media the room has to sit through, as opposed to a still image. */
+const isTimed = (m) => !!m && (m.kind === 'video' || m.kind === 'audio' || m.kind === 'youtube');
+
+/**
+ * The sequence of screens for one question.
+ *
+ *   plain      media? → prompt → answer
+ *   choices    media? → prompt+options → options with the right one lit
+ *   multipart  media? → rules → part 1 → answer 1 → part 2 → answer 2 → …
+ */
+function buildFrames(q, timed) {
+  const f = [];
+  if (timed) f.push({ k: 'media' });
+  f.push({ k: 'prompt' });
+
+  if (q.parts?.length) {
+    q.parts.forEach((_, i) => f.push({ k: 'part', i }, { k: 'partAnswer', i }));
+  } else {
+    f.push({ k: 'answer' });
+  }
+  return f;
+}
+
 export function next() {
   if (!cur) return;
 
-  if (cur.step < 2) {
-    cur.step += 1;
+  if (cur.i < cur.frames.length - 1) {
+    cur.i += 1;
     paint();
     return;
   }
 
-  // Past the answer: mark it played and drop back to the board.
+  // Past the last screen: mark it played and drop back to the board.
   cur.q.done = true;
   touch();
   close();
 }
 
-/** Media the room has to sit through, as opposed to a still image. */
-const isTimed = (m) => !!m && (m.kind === 'video' || m.kind === 'audio' || m.kind === 'youtube');
-
 export function back() {
   if (!cur) return;
-  const floor = cur.timed ? 0 : 1;
-  if (cur.step > floor) {
-    cur.step -= 1;
+  if (cur.i > 0) {
+    cur.i -= 1;
     paint();
   } else {
     close();
@@ -110,33 +135,49 @@ export function back() {
 /* ── Painting ──────────────────────────────────────────────── */
 
 function paint() {
-  const { step, q, timed } = cur;
+  const { q, timed, label, frames, i } = cur;
+  const f = frames[i];
   const mc = q.options.length > 0;
+  const last = i === frames.length - 1;
+  const inPart = f.k === 'part' || f.k === 'partAnswer';
 
   // Timed media shrinks out of the way once the question is up; a still image
   // stays large, because looking at it *is* the question.
-  dom.media.classList.toggle('is-thumb', timed && step > 0);
+  dom.media.classList.toggle('is-thumb', timed && f.k !== 'media');
   dom.media.classList.toggle('is-still', !timed && !!q.media);
-  dom.question.hidden = step < 1;
-  dom.options.hidden = step < 1 || !mc;
-  dom.answer.hidden = step < 2 || (mc && !q.answer.trim());
 
-  dom.question.textContent = q.prompt.trim() || '— no question written yet —';
-  dom.question.classList.toggle('is-placeholder', !q.prompt.trim());
+  // Once a multi-part challenge is running, the rules step aside — the room
+  // only needs the part they are being asked right now.
+  dom.question.hidden = f.k === 'media';
+  dom.options.hidden = f.k === 'media' || !mc || inPart;
+  dom.answer.hidden = !(f.k === 'answer' || f.k === 'partAnswer') || (mc && !q.answer.trim());
 
-  if (mc) paintOptions(q, step);
+  const text = inPart ? q.parts[f.i].q : q.prompt.trim() || '— no question written yet —';
+  dom.question.textContent = text;
+  dom.question.classList.toggle('is-placeholder', !inPart && !q.prompt.trim());
+  dom.question.classList.toggle('is-part', inPart);
 
-  dom.answer.textContent = q.answer.trim() || (mc ? '' : '— no answer written yet —');
+  dom.cat.textContent = inPart ? `${label} — Q${f.i + 1} of ${q.parts.length}` : label;
+
+  if (mc) paintOptions(q, f.k === 'answer');
+
+  dom.answer.textContent = f.k === 'partAnswer'
+    ? q.parts[f.i].a
+    : q.answer.trim() || (mc ? '' : '— no answer written yet —');
 
   dom.next.textContent =
-    step === 0 ? 'Show Question →' : step === 1 ? 'Reveal Answer ✦' : 'Done — back to board';
-  dom.back.textContent = step > (timed ? 0 : 1) ? '← Back' : '← Board';
+    f.k === 'media' ? 'Show Question →'
+    : f.k === 'prompt' ? (q.parts?.length ? 'Start — Q1 →' : 'Reveal Answer ✦')
+    : f.k === 'part' ? 'Reveal Answer ✦'
+    : last ? 'Done — back to board'
+    : `Next — Q${f.i + 2} →`;
+
+  dom.back.textContent = i > 0 ? '← Back' : '← Board';
 }
 
 const LETTERS = 'ABCDEFGH';
 
-function paintOptions(q, step) {
-  const revealed = step >= 2;
+function paintOptions(q, revealed) {
 
   // Rebuild only when the question changes, so advancing to the answer
   // highlights in place instead of re-running the entrance stagger.

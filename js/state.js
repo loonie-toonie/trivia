@@ -3,7 +3,7 @@
  */
 
 import * as db from './db.js';
-import { defaultGame, blankQuestion, blankCategory, SCHEMA_VERSION } from './data.js';
+import { defaultGame, blankQuestion, blankCategory, SCHEMA_VERSION, SEED_VERSION } from './data.js';
 
 const GAME_KEY = 'game';
 
@@ -12,6 +12,7 @@ export const state = {
   editing: false,
   presenting: false,
   dirty: false,
+  reseeded: false,
 };
 
 const listeners = new Set();
@@ -21,17 +22,27 @@ const emit = () => listeners.forEach((fn) => fn(state));
 /* ── Load ──────────────────────────────────────────────────── */
 
 export async function load() {
-  let game = null;
+  let saved = null;
 
   if (db.isSupported()) {
     try {
-      game = await db.kvGet(GAME_KEY);
+      saved = await db.kvGet(GAME_KEY);
     } catch (err) {
       console.warn('[trivia] could not read saved game:', err);
     }
   }
 
-  state.game = normalise(game) || defaultGame();
+  // A newer set of questions shipped with the site wins over an older saved
+  // copy — otherwise a content fix could never reach a browser that had
+  // already cached a board. The superseded document is kept, not dropped.
+  if (saved && Number(saved.seedVersion) !== SEED_VERSION) {
+    try { await db.kvSet('game:superseded', structuredClone(saved)); } catch { /* best effort */ }
+    console.info(`[trivia] questions updated (seed ${saved.seedVersion ?? '?'} → ${SEED_VERSION})`);
+    saved = null;
+    state.reseeded = true;
+  }
+
+  state.game = normalise(saved) || defaultGame();
   emit();
   return state.game;
 }
@@ -46,6 +57,7 @@ function normalise(game) {
   }
 
   game.schema = SCHEMA_VERSION;
+  game.seedVersion = SEED_VERSION;
   game.title = typeof game.title === 'string' ? game.title : 'TRIVIA NIGHT';
   game.activeRound = clamp(Number(game.activeRound) || 0, 0, game.rounds.length - 1);
 
@@ -78,6 +90,10 @@ function normalise(game) {
             options,
             correct: Number.isInteger(correct) && correct >= 0 && correct < options.length ? correct : -1,
             answer: typeof q.answer === 'string' ? q.answer : '',
+            parts: (Array.isArray(q.parts) ? q.parts : [])
+              .filter((p) => p && typeof p === 'object')
+              .map((p) => ({ q: String(p.q ?? ''), a: String(p.a ?? '') }))
+              .slice(0, 12),
             label: typeof q.label === 'string' ? q.label : '',
             media: normaliseMedia(q.media),
             done: !!q.done,
@@ -216,7 +232,7 @@ export function resizeLoss(roundIdx, { cols, rows }) {
   const r = state.game.rounds[roundIdx];
   const lost = [];
 
-  const hasContent = (q) => q.prompt.trim() || q.answer.trim() || q.media || q.options.length;
+  const hasContent = (q) => q.prompt.trim() || q.answer.trim() || q.media || q.options.length || q.parts.length;
 
   if (Number.isFinite(cols) && !r.hideCategories && cols < r.categories.length) {
     for (const c of r.categories.slice(cols)) {

@@ -33,6 +33,10 @@ async function boot() {
   await load();
   db.requestPersistence().catch(() => {});
 
+  if (state.reseeded) {
+    status('Questions updated to the latest version', 'ok', 6000);
+  }
+
   onChange(render);
   wireToolbar();
   wireKeys();

@@ -550,6 +550,13 @@ button, input, textarea, select { font: inherit; color: inherit; }
 }
 .stage-question.is-placeholder { color: var(--ink-faint); font-weight: 600; }
 
+/* A part of a multi-part challenge is a short question in its own right, so
+   it gets the full headline treatment rather than the long rules text size. */
+.stage-question.is-part {
+  font-size: clamp(26px, 4vw, 58px);
+  max-width: 20ch;
+}
+
 /* ── Multiple choice ────────────────────────────────────────── */
 
 .stage-options {
