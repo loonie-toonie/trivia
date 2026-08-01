@@ -55,7 +55,7 @@ function open(prompt, answer, extra = {}) {
 }
 
 const img = (file) => ({ kind: 'image', url: A + file });
-const vid = (file) => ({ kind: 'video', url: A + file });
+const vid = (file, opts = {}) => ({ kind: 'video', url: A + file, ...opts });
 
 function cat(name, icon, color, questions) {
   return { id: uid('c'), name, icon, color, questions };
@@ -267,7 +267,7 @@ export function defaultGame() {
 
             open('You just saw seven seconds from a video regarding a famous Lebanese song. Can you guess its name?',
               'Kifik 3a Fra2e — Fadel Chaker',
-              { media: vid('r3-q8-fadelchaker.mp4') }),
+              { media: vid('r3-q8-fadelchaker.mp4', { muted: true }) }),
 
             open('Plank Challenge!\n\nChoose three team members to hold a plank without moving while the rest of the team names five countries beginning with the letter L. If anyone drops before all five countries are named, the team loses the challenge!',
               'Possible answers: Lebanon, Libya, Laos, Latvia, Lithuania, Luxembourg, Liechtenstein'),

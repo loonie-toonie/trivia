@@ -100,6 +100,7 @@ function normaliseMedia(m) {
     mediaId: m.mediaId || undefined,
     url: m.url || undefined,
     videoId: m.videoId || undefined,
+    muted: m.muted ? true : undefined,
     name: m.name || undefined,
     mime: m.mime || undefined,
   };

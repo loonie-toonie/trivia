@@ -51,7 +51,11 @@ export async function open(roundIdx, catIdx, qIdx) {
   const r = state.game.rounds[roundIdx];
   const c = r.categories[catIdx];
 
-  cur = { roundIdx, catIdx, qIdx, q, step: q.media ? 0 : 1, hasMedia: !!q.media };
+  // Video and audio get a step of their own — the room watches, then the
+  // question appears. A still image is part of the question, so it shows
+  // together with it and there is nothing to wait for.
+  const timed = isTimed(q.media);
+  cur = { roundIdx, catIdx, qIdx, q, step: timed ? 0 : 1, hasMedia: !!q.media, timed };
   armedAt = performance.now();
 
   dom.round.textContent = r.subtitle ? `${r.name} · ${r.subtitle}` : r.name;
@@ -89,9 +93,12 @@ export function next() {
   close();
 }
 
+/** Media the room has to sit through, as opposed to a still image. */
+const isTimed = (m) => !!m && (m.kind === 'video' || m.kind === 'audio' || m.kind === 'youtube');
+
 export function back() {
   if (!cur) return;
-  const floor = cur.hasMedia ? 0 : 1;
+  const floor = cur.timed ? 0 : 1;
   if (cur.step > floor) {
     cur.step -= 1;
     paint();
@@ -103,10 +110,13 @@ export function back() {
 /* ── Painting ──────────────────────────────────────────────── */
 
 function paint() {
-  const { step, q, hasMedia } = cur;
+  const { step, q, timed } = cur;
   const mc = q.options.length > 0;
 
-  dom.media.classList.toggle('is-thumb', step > 0);
+  // Timed media shrinks out of the way once the question is up; a still image
+  // stays large, because looking at it *is* the question.
+  dom.media.classList.toggle('is-thumb', timed && step > 0);
+  dom.media.classList.toggle('is-still', !timed && !!q.media);
   dom.question.hidden = step < 1;
   dom.options.hidden = step < 1 || !mc;
   dom.answer.hidden = step < 2 || (mc && !q.answer.trim());
@@ -120,7 +130,7 @@ function paint() {
 
   dom.next.textContent =
     step === 0 ? 'Show Question →' : step === 1 ? 'Reveal Answer ✦' : 'Done — back to board';
-  dom.back.textContent = step > (hasMedia ? 0 : 1) ? '← Back' : '← Board';
+  dom.back.textContent = step > (timed ? 0 : 1) ? '← Back' : '← Board';
 }
 
 const LETTERS = 'ABCDEFGH';
@@ -197,6 +207,9 @@ function buildMedia(media, src) {
       v.controls = true;
       v.playsInline = true;
       v.autoplay = true;
+      // Some clips are shown for the picture only — the soundtrack would give
+      // the answer away.
+      v.muted = !!media.muted;
       v.play?.().catch(() => {});
       return v;
     }
