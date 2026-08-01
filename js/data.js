@@ -134,14 +134,12 @@ export function defaultGame() {
               'Avocado',
             ], 3),
 
-            // ⚠️ The Canva doc describes a video here but none was embedded.
-            // Attach the clip in Edit mode before the event.
             mc('This video shows one of the most infamous incidents in World Cup history. Which player bit his opponent during the match?', [
               'Pepe',
               'Sergio Ramos',
               'Luis Suárez',
               'Diego Costa',
-            ], 2),
+            ], 2, { media: vid('r1-sports-q2-suarez.mp4') }),
 
             mc('Erling Haaland has inspired many viral memes — but which one did he reveal is his personal favourite?', [
               'A',
