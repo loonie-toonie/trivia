@@ -30,7 +30,7 @@ export const SCHEMA_VERSION = 3;
  * board re-seeds from here, and the previous document is kept under the
  * `game:superseded` key so nothing is actually lost.
  */
-export const SEED_VERSION = 4;
+export const SEED_VERSION = 5;
 
 let seq = 0;
 const uid = (p) => `${p}${(++seq).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -101,7 +101,7 @@ export function defaultGame() {
             mc('Who made the phrase “Hakuna Matata” famous?', [
               'Alex and Marty',
               'Shrek and Donkey',
-              'Timon and Pumbaa (The Lion King)',
+              'Timon and Pumbaa',
               'Dirty Mafia',
             ], 2),
 
