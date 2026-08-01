@@ -44,7 +44,6 @@
       <span id="stage-cat" class="stage-cat"></span>
     </div>
     <div class="stage-head-right">
-      <span id="stage-points" class="stage-points"></span>
       <button class="stage-close" data-action="stage-close" title="Back to board (Esc)">✕</button>
     </div>
   </div>
@@ -120,16 +119,10 @@
       <textarea id="edit-answer" rows="2" placeholder="Shown at the reveal"></textarea>
     </label>
 
-    <div class="field-row">
-      <label class="field">
-        <span class="field-label">Points</span>
-        <input type="number" id="edit-points" min="0" max="1000" step="5" />
-      </label>
-      <label class="field">
-        <span class="field-label">Tile label</span>
-        <input type="text" id="edit-label" placeholder="? (leave blank for ?)" />
-      </label>
-    </div>
+    <label class="field">
+      <span class="field-label">Tile label</span>
+      <input type="text" id="edit-label" placeholder="? (leave blank for ?)" />
+    </label>
 
     <fieldset class="field media-field">
       <legend class="field-label">Media — shown before the question</legend>

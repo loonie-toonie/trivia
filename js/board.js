@@ -134,14 +134,13 @@ function tile(q, cat, ci, qi) {
 
   t.append(el('span', 'tile-face', q.done ? '✓' : q.label.trim() || '?'));
 
-  if (q.points > 0) t.append(el('span', 'tile-mark', `${q.points}`));
   if (q.media) t.append(el('span', 'tile-badge', MEDIA_ICON[q.media.kind] || '📎'));
 
   t.setAttribute(
     'aria-label',
     state.editing
       ? `Edit ${cat.name} question ${qi + 1}`
-      : `${cat.name}, ${q.points} points${q.done ? ', already played' : ''}`
+      : `${cat.name}, question ${qi + 1}${q.done ? ', already played' : ''}`
   );
 
   t.addEventListener('click', () => {

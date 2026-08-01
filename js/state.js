@@ -78,7 +78,6 @@ function normalise(game) {
             options,
             correct: Number.isInteger(correct) && correct >= 0 && correct < options.length ? correct : -1,
             answer: typeof q.answer === 'string' ? q.answer : '',
-            points: Number.isFinite(Number(q.points)) ? Number(q.points) : 100,
             label: typeof q.label === 'string' ? q.label : '',
             media: normaliseMedia(q.media),
             done: !!q.done,
@@ -192,7 +191,7 @@ export function resizeRound(roundIdx, { cols, rows, gridCols }) {
       const rowCount = r.categories[0]?.questions.length || rows || 3;
       const model = r.categories[0]?.questions || [];
       const c = blankCategory(r.categories.length + 1);
-      for (let i = 0; i < rowCount; i++) c.questions.push(blankQuestion(model[i]?.points ?? (i + 1) * 100));
+      for (let i = 0; i < rowCount; i++) c.questions.push(blankQuestion());
       r.categories.push(c);
     }
     r.gridCols = r.categories.length;
@@ -203,8 +202,7 @@ export function resizeRound(roundIdx, { cols, rows, gridCols }) {
     for (const c of r.categories) {
       while (c.questions.length > target) c.questions.pop();
       while (c.questions.length < target) {
-        const last = c.questions[c.questions.length - 1];
-        c.questions.push(blankQuestion(last ? last.points + 100 : 100));
+        c.questions.push(blankQuestion());
       }
     }
   }

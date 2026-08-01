@@ -32,7 +32,6 @@ export function init({ afterChange }) {
   dom.correct = document.getElementById('edit-correct');
   dom.correctRow = document.getElementById('edit-correct-row');
   dom.answer = document.getElementById('edit-answer');
-  dom.points = document.getElementById('edit-points');
   dom.label = document.getElementById('edit-label');
   dom.file = document.getElementById('edit-file');
   dom.url = document.getElementById('edit-url');
@@ -89,7 +88,6 @@ export function openQuestion(roundIdx, catIdx, qIdx) {
   dom.prompt.value = q.prompt;
   dom.options.value = q.options.join('\n');
   dom.answer.value = q.answer;
-  dom.points.value = q.points;
   dom.label.value = q.label;
   dom.url.value = draftMedia?.url || '';
   dom.file.value = '';
@@ -132,8 +130,6 @@ function commitQuestion() {
   q.answer = dom.answer.value.trim();
   q.label = dom.label.value.trim();
 
-  const pts = Number(dom.points.value);
-  q.points = Number.isFinite(pts) && pts >= 0 ? pts : q.points;
   q.media = draftMedia;
 
   touch();

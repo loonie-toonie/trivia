@@ -313,15 +313,6 @@ button, input, textarea, select { font: inherit; color: inherit; }
   to   { transform: scale(1); opacity: 0.5; }
 }
 
-.tile-mark {
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink-faint);
-  letter-spacing: 0.04em;
-}
 
 .tile-badge {
   position: absolute;
@@ -434,11 +425,6 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 .stage-head-right { display: flex; align-items: center; gap: 16px; }
 
-.stage-points {
-  font-size: clamp(16px, 1.7vw, 24px);
-  font-weight: 800;
-  color: var(--yellow);
-}
 
 .stage-close {
   width: 42px;

@@ -19,7 +19,6 @@ export function init() {
   dom.stage = document.getElementById('stage');
   dom.round = document.getElementById('stage-round');
   dom.cat = document.getElementById('stage-cat');
-  dom.points = document.getElementById('stage-points');
   dom.media = document.getElementById('stage-media');
   dom.question = document.getElementById('stage-question');
   dom.options = document.getElementById('stage-options');
@@ -58,7 +57,6 @@ export async function open(roundIdx, catIdx, qIdx) {
   dom.round.textContent = r.subtitle ? `${r.name} · ${r.subtitle}` : r.name;
   dom.cat.textContent = r.hideCategories ? `Question ${qIdx + 1}` : c.icon ? `${c.icon} ${c.name}` : c.name;
   dom.cat.style.setProperty('--cat', c.color);
-  dom.points.textContent = q.points > 0 ? `${q.points} pts` : '';
 
   document.activeElement?.blur?.();
   dom.stage.hidden = false;
