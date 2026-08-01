@@ -128,11 +128,15 @@ function tile(q, cat, ci, qi) {
   t.type = 'button';
   t.style.setProperty('--glow', hexA(cat.color, 0.22));
 
-  const blank = !q.prompt.trim() && !q.answer.trim() && !q.media;
+  const blank = !q.prompt.trim() && !q.answer.trim() && !q.media && !q.options.length;
   if (q.done) t.classList.add('is-done');
   if (blank) t.classList.add('is-empty');
 
-  t.append(el('span', 'tile-face', q.done ? '✓' : q.label.trim() || '?'));
+  // While editing, an empty tile says so — a dimmed "?" is far too easy to
+  // miss when you are hunting for the one question you still have to write.
+  const face = q.done ? '✓' : blank && state.editing ? 'Empty' : q.label.trim() || '?';
+  t.append(el('span', 'tile-face', face));
+  if (blank && state.editing) t.classList.add('is-empty-flag');
 
   if (q.media) t.append(el('span', 'tile-badge', MEDIA_ICON[q.media.kind] || '📎'));
 

@@ -284,6 +284,21 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 .tile.is-empty { border-style: dashed; opacity: 0.55; }
 
+/* Edit mode only — make the unwritten tiles impossible to miss. */
+.tile.is-empty-flag {
+  opacity: 1;
+  border-color: rgba(252, 211, 77, 0.55);
+  background: rgba(252, 211, 77, 0.07);
+}
+.tile.is-empty-flag .tile-face {
+  font-size: clamp(12px, 1.2vw, 17px);
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--yellow);
+  opacity: 0.85;
+}
+
 .tile.is-picked {
   animation: pick 0.9s ease-out;
   border-color: var(--yellow);
