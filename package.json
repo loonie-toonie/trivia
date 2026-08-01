@@ -1,0 +1,10 @@
+{
+  "name": "clara-trivia-night",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static trivia night board — 3 rounds, media questions, browser-persisted edits",
+  "scripts": {
+    "dev": "npx --yes serve@14 . -l 5173",
+    "start": "npx --yes serve@14 . -l 5173"
+  }
+}

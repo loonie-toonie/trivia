@@ -1,0 +1,167 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trivia Night</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>" />
+<link rel="stylesheet" href="./css/style.css" />
+
+<div id="app" class="app">
+  <header class="topbar">
+    <h1 id="game-title" class="title">TRIVIA NIGHT</h1>
+    <div id="status" class="status" data-tone="ok">Ready</div>
+  </header>
+
+  <nav class="toolbar" id="toolbar">
+    <div class="toolbar-group" id="round-tabs"><!-- round buttons injected --></div>
+    <div class="toolbar-group toolbar-tools">
+      <button class="btn" data-action="edit" aria-pressed="false"><span class="ico">✏️</span>Edit</button>
+      <button class="btn" data-action="board-size"><span class="ico">📐</span>Board Size</button>
+      <button class="btn" data-action="save"><span class="ico">💾</span><span class="txt-save">Save</span></button>
+      <button class="btn" data-action="backup"><span class="ico">⬇</span>Backup</button>
+      <button class="btn" data-action="restore"><span class="ico">⬆</span>Restore</button>
+      <button class="btn btn-present" data-action="present"><span class="ico">🎬</span>Present Game</button>
+    </div>
+  </nav>
+
+  <main class="board-wrap">
+    <div id="board" class="board" aria-live="polite"></div>
+    <div id="board-note" class="board-note"></div>
+  </main>
+
+  <footer class="hints" id="hints">
+    <span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> rounds</span>
+    <span><kbd>Space</kbd> advance</span>
+    <span><kbd>Esc</kbd> back</span>
+    <span><kbd>E</kbd> edit</span>
+    <span><kbd>P</kbd> present</span>
+  </footer>
+</div>
+
+<!-- ══ Question stage ══ -->
+<div id="stage" class="stage" hidden>
+  <div class="stage-head">
+    <div class="stage-meta">
+      <span id="stage-round" class="stage-round"></span>
+      <span id="stage-cat" class="stage-cat"></span>
+    </div>
+    <div class="stage-head-right">
+      <span id="stage-points" class="stage-points"></span>
+      <button class="stage-close" data-action="stage-close" title="Back to board (Esc)">✕</button>
+    </div>
+  </div>
+
+  <div class="stage-body">
+    <div id="stage-media" class="stage-media"></div>
+    <div id="stage-question" class="stage-question" hidden></div>
+    <ol id="stage-options" class="stage-options" hidden></ol>
+    <div id="stage-answer" class="stage-answer" hidden></div>
+  </div>
+
+  <div class="stage-foot">
+    <button class="btn btn-lg" data-action="stage-back" id="stage-back">← Back</button>
+    <button class="btn btn-lg btn-primary" data-action="stage-next" id="stage-next">Show Question →</button>
+  </div>
+</div>
+
+<!-- ══ Board size modal ══ -->
+<dialog id="dlg-size" class="dlg">
+  <form method="dialog" class="dlg-inner">
+    <h2 class="dlg-title">📐 Board Size</h2>
+    <p class="dlg-sub" id="size-scope"></p>
+
+    <label class="field">
+      <span class="field-label">Categories (columns)</span>
+      <input type="number" id="size-cols" min="1" max="8" step="1" />
+      <small>Adds or removes a whole category column in this round.</small>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Questions per category (rows)</span>
+      <input type="number" id="size-rows" min="1" max="10" step="1" />
+      <small>Adds or removes a row across every category.</small>
+    </label>
+
+    <label class="field" id="size-grid-field" hidden>
+      <span class="field-label">Tiles per row</span>
+      <input type="number" id="size-grid" min="1" max="8" step="1" />
+      <small>Layout only — this round has no categories.</small>
+    </label>
+
+    <p class="dlg-warn" id="size-warn" hidden></p>
+
+    <div class="dlg-actions">
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn btn-primary" value="apply" id="size-apply">Apply</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ══ Question editor modal ══ -->
+<dialog id="dlg-edit" class="dlg dlg-wide">
+  <form method="dialog" class="dlg-inner">
+    <h2 class="dlg-title">✏️ Edit question</h2>
+    <p class="dlg-sub" id="edit-scope"></p>
+
+    <label class="field">
+      <span class="field-label">Question</span>
+      <textarea id="edit-prompt" rows="3" placeholder="What is…"></textarea>
+    </label>
+
+    <fieldset class="field">
+      <legend class="field-label">Choices — one per line, leave empty for an open question</legend>
+      <textarea id="edit-options" rows="4" placeholder="Alex and Marty&#10;Shrek and Donkey&#10;Timon and Pumbaa&#10;Dirty Mafia"></textarea>
+      <div class="correct-row" id="edit-correct-row">
+        <span class="correct-label">Correct:</span>
+        <div class="correct-picks" id="edit-correct"></div>
+      </div>
+    </fieldset>
+
+    <label class="field">
+      <span class="field-label">Answer / notes <small>— optional when there are choices</small></span>
+      <textarea id="edit-answer" rows="2" placeholder="Shown at the reveal"></textarea>
+    </label>
+
+    <div class="field-row">
+      <label class="field">
+        <span class="field-label">Points</span>
+        <input type="number" id="edit-points" min="0" max="1000" step="5" />
+      </label>
+      <label class="field">
+        <span class="field-label">Tile label</span>
+        <input type="text" id="edit-label" placeholder="? (leave blank for ?)" />
+      </label>
+    </div>
+
+    <fieldset class="field media-field">
+      <legend class="field-label">Media — shown before the question</legend>
+
+      <div class="media-tabs" id="media-tabs">
+        <button type="button" class="mtab" data-kind="none">None</button>
+        <button type="button" class="mtab" data-kind="file">Upload file</button>
+        <button type="button" class="mtab" data-kind="url">Link / YouTube</button>
+      </div>
+
+      <div class="media-pane" data-pane="file" hidden>
+        <input type="file" id="edit-file" accept="image/*,video/*,audio/*" />
+        <small>Image, video or audio. Stored in your browser — survives refresh.</small>
+      </div>
+
+      <div class="media-pane" data-pane="url" hidden>
+        <input type="url" id="edit-url" placeholder="https://… or a YouTube link" />
+        <small>YouTube links become an embedded player.</small>
+      </div>
+
+      <div class="media-preview" id="edit-media-preview"></div>
+    </fieldset>
+
+    <div class="dlg-actions">
+      <button class="btn btn-danger" value="clear" id="edit-clear" type="submit">Clear question</button>
+      <span class="spacer"></span>
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn btn-primary" value="save">Save question</button>
+    </div>
+  </form>
+</dialog>
+
+<input type="file" id="restore-input" accept="application/json,.json" hidden />
+
+<script type="module" src="./js/app.js"></script>
