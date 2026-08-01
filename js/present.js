@@ -27,6 +27,7 @@ export function init() {
   dom.question = document.getElementById('stage-question');
   dom.options = document.getElementById('stage-options');
   dom.answer = document.getElementById('stage-answer');
+  dom.body = dom.stage.querySelector('.stage-body');
   dom.next = document.getElementById('stage-next');
   dom.back = document.getElementById('stage-back');
 
@@ -145,6 +146,7 @@ function paint() {
   // stays large, because looking at it *is* the question.
   dom.media.classList.toggle('is-thumb', timed && f.k !== 'media');
   dom.media.classList.toggle('is-still', !timed && !!q.media);
+  dom.body.classList.toggle('has-still', !timed && !!q.media);
 
   // Once a multi-part challenge is running, the rules step aside — the room
   // only needs the part they are being asked right now.

@@ -473,6 +473,16 @@ button, input, textarea, select { font: inherit; color: inherit; }
   padding: 2px;
 }
 
+.stage-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2.2vh, 28px);
+  width: 100%;
+  min-width: 0;
+}
+
 .stage-media {
   display: flex;
   align-items: center;
@@ -496,13 +506,14 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .stage-media img,
 .stage-media video {
   max-width: min(100%, 1100px);
+  /* Percentage, not vh — the container is what flexbox actually gave us, and
+     a viewport-relative cap lets the image spill out over the question. */
   max-height: 100%;
   border-radius: var(--radius-lg);
   border: 1px solid var(--line);
   box-shadow: 0 26px 70px rgba(0, 0, 0, 0.6);
   object-fit: contain;
   background: #000;
-  transition: max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1), max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .stage-media iframe {
@@ -527,17 +538,30 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .audio-card .audio-emoji { font-size: clamp(48px, 8vw, 96px); }
 .audio-card audio { width: min(72vw, 620px); }
 
-.stage-media.is-thumb { flex: 0 0 auto; max-height: 30vh; }
-.stage-media.is-thumb img,
-.stage-media.is-thumb video { max-height: 30vh; }
+/* These give the band a DEFINITE height so the `max-height: 100%` above has
+   something to resolve against. With only a max-height the parent stays
+   auto-sized, the percentage computes to none, and the media overflows. */
+.stage-media.is-thumb { flex: 0 0 auto; height: 28vh; }
 .stage-media.is-thumb iframe { width: min(58vw, 640px); }
 .stage-media.is-thumb .audio-card { padding: 18px 34px; }
 .stage-media.is-thumb .audio-card .audio-emoji { font-size: 34px; }
 
 /* A still image shows alongside its question rather than on a step of its
    own, so it needs room for both — bigger than a thumbnail, not full-bleed. */
-.stage-media.is-still { flex: 0 1 auto; max-height: 46vh; }
-.stage-media.is-still img { max-height: 46vh; }
+.stage-media.is-still { flex: 0 1 auto; height: 42vh; min-height: 200px; }
+
+/* On a laptop there is plenty of unused width, so put the picture beside the
+   question instead of stacking them and squeezing the picture to nothing. */
+@media (min-width: 900px) and (min-height: 480px) {
+  .stage-body.has-still { flex-direction: row; justify-content: center; }
+  .stage-body.has-still .stage-media.is-still {
+    flex: 0 1 48%;
+    height: 100%;
+    min-height: 0;
+  }
+  .stage-body.has-still .stage-text { flex: 1 1 48%; }
+  .stage-body.has-still .stage-options { grid-template-columns: 1fr; }
+}
 
 .stage-question {
   font-size: clamp(24px, 3.4vw, 54px);
@@ -845,11 +869,8 @@ button, input, textarea, select { font: inherit; color: inherit; }
   .opt { padding: 9px 12px; font-size: 14.5px; gap: 10px; border-radius: 11px; }
   .opt-key { width: 24px; font-size: 12px; }
 
-  .stage-media.is-thumb,
-  .stage-media.is-thumb img,
-  .stage-media.is-thumb video { max-height: 22vh; }
-  .stage-media.is-still,
-  .stage-media.is-still img { max-height: 34vh; }
+  .stage-media.is-thumb { height: 21vh; }
+  .stage-media.is-still { height: 31vh; }
   .stage-media.is-thumb iframe { width: 100%; }
 
   .stage-foot { gap: 8px; }
@@ -860,11 +881,8 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 /* Short landscape phones: claw back vertical space from the media. */
 @media (max-height: 520px) and (orientation: landscape) {
-  .stage-media.is-thumb,
-  .stage-media.is-thumb img,
-  .stage-media.is-thumb video { max-height: 26vh; }
-  .stage-media.is-still,
-  .stage-media.is-still img { max-height: 40vh; }
+  .stage-media.is-thumb { height: 26vh; }
+  .stage-media.is-still { height: 38vh; }
   .stage-question { font-size: clamp(16px, 3vw, 24px); }
 }
 
