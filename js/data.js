@@ -222,8 +222,12 @@ export function defaultGame() {
               'Carole Samaha',
             ], 1),
 
-            // Not written in the Canva doc yet.
-            open('', ''),
+            mc('Who performed in front of Pope John Paul II during his visit to Lebanon in 1997?', [
+              'Fairuz',
+              'Julia Boutros',
+              'Majida El Roumi',
+              'Carole Samaha',
+            ], 2),
           ]),
         ],
       },
